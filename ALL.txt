@@ -1,0 +1,562 @@
+PRACTICAL 1
+
+num1 = int(input("Enter number1: "))
+num2 = int(input("Enter number2: "))
+
+
+print("AND: ", bin(num1 & num2))
+print("OR: ", bin(num1 | num2))
+print("NOT: ", bin(~num1) , bin(~num2))
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 2
+
+def pra(matrix,nodes,k):
+    pr = {}
+    inbound = {}
+    outbound = {}
+    
+    for node in nodes:
+        pr[node] = 1/len(nodes)
+        inbound[node] = []
+        outbound[node] = 0
+        
+    for i in range(len(nodes)):
+        for j in range(len(nodes)):
+            
+            if matrix[i][j] == 1:
+                inbound[nodes[i]].append(nodes[j])
+                outbound[nodes[j]] += 1
+                
+    for i in range(k):
+        
+        temp_pr = {}
+        
+        for node in nodes:
+            tnode = 0
+            for b in inbound[node]:
+                tnode += pr[b]/outbound[b]
+            temp_pr[node] = tnode
+        
+        pr = temp_pr
+                
+    print(pr)        
+        
+        
+nodes = ["A","B","C","D"]
+matrix = [[0,0,1,0],[1,0,1,0],[1,0,0,1],[0,1,1,0]]
+k = input("Enter the no of iterations: ")
+pra(matrix,nodes,int(k))
+
+
+
+or
+
+
+def pra(matrix,nodes,k):
+    pr = {}
+    inbound = {}
+    outbound = {}
+    for node in nodes:
+        inbound[node] = []
+        outbound[node] = 0
+        pr[node] = 1/len(nodes)
+    for i in range(len(nodes)):
+        for j in range(len(nodes)):
+            if matrix[i][j] == 1:
+                inbound[nodes[i]].append(nodes[j])
+                outbound[nodes[j]] += 1
+    for _ in range(k):
+        new_pr={}
+        for node in nodes:
+            node_pr = 0
+            for in_node in inbound[node]:
+                node_pr += pr[in_node]/outbound[in_node]
+            new_pr[node] = node_pr
+        pr = new_pr
+    sorted_by_values = dict(sorted(pr.items(), key=lambda item: item[1], reverse=True))
+    print(sorted_by_values)
+print("Enter the nodes(put space between two nodes): ",end="")
+nodes = list(map(str, input().split()))
+matrix = []
+for i in range(len(nodes)):
+    print(f"Enter the row{i+1} matrix values(put space between two values): ",end="")
+    row_nodes = list(map(int, input().split())) 
+    matrix.append(row_nodes)
+# nodes = ["A","B","C","D"]
+# matrix = [[0,0,1,0],[1,0,1,0],[1,0,0,1],[0,1,1,0]]
+k = input("Enter the no of iterations: ")
+pra(matrix,nodes,int(k))
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 3
+
+def edit_distance(str1,str2):
+    matrix = []
+    for i in range(len(str2) + 1):
+        matrix.append([])
+        for j in range(len(str1) + 1):
+            matrix[i].append(0)
+    for i in range(len(str2) + 1):
+        for j in range(len(str1)+1):
+            if i == 0:
+                matrix[i][j] = j
+            elif j == 0:
+                matrix[i][j] = i
+            elif str1[j-1] == str2[i-1]:
+                matrix[i][j] = matrix[i-1][j-1]
+            elif str1[j-1] != str2[i-1]:
+                matrix[i][j] = min(matrix[i-1][j], matrix[i][j-1], matrix[i-1][j-1]) + 1
+    print(matrix)
+    print(f"Edit Distance: {matrix[-1][-1]}") 
+    for i in range(len(str2)+1):
+        for j in range(len(str1)+1):
+            print(matrix[i][j],end=" ")
+        print() 
+edit_distance("MONEY","MONKEY")
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 4
+
+def edit_distance(doc1, doc2):
+    str1 = file_to_string(doc1).lower()
+    str2 = file_to_string(doc2).lower()
+    matrix = [[0]*(len(str1)+1) for i in range(len(str2)+1)]
+    for i in range(len(str2)+1):
+        for j in range(len(str1)+1):
+            if i == 0:
+                matrix[i][j] = j
+            elif j == 0:
+                matrix[i][j] = i
+            elif str1[j-1] == str2[i-1]:
+                matrix[i][j] = matrix[i-1][j-1]
+            else:
+                matrix[i][j] = min(matrix[i-1][j-1],matrix[i-1][j],matrix[i][j-1])+1
+    
+    print("Similarity: ",matrix[-1][-1])
+    
+def file_to_string(file):
+    str1 = ""
+    list_file = file.readlines()
+    for line in list_file:
+        for ch in line:
+            if ch == "\n" and ch == " ":
+                str1+=ch
+    return str1
+path1 = input("Enter the path of file1: ")
+path2 = input("Enter the path of file2: ")
+file1 = open(path1,'r')
+file2 = open(path2,'r')
+edit_distance(file1,file2)
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 5
+
+#HITS algorithm
+
+def hits(matrix,nodes,k):
+    inbound = {}
+    outbound = {}
+    for i in nodes:
+        inbound[i] = []
+        outbound[i] = []
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if matrix[i][j] == 1:
+                inbound[nodes[i]].append(nodes[j])
+                outbound[nodes[j]].append(nodes[i])
+    hubs = {}
+    authorities = {}
+    for i in nodes:
+        hubs[i] = 1
+        authorities[i] = 1
+    for i in range(k):
+        #Authority update
+        auhtority_sum = 0
+        for node in nodes:
+            authorities[node] = 0
+            for in_node in inbound[node]:
+                authorities[node] += hubs[in_node]
+            auhtority_sum += authorities[node]
+        #Normalization
+        for node in nodes:
+            authorities[node] /= auhtority_sum
+        #Hub update
+        hubs_sum = 0
+        for node in nodes:
+            hubs[node] = 0
+            for out_node in outbound[node]:
+                hubs[node] += authorities[out_node]
+            hubs_sum += hubs[node]
+        #Normalization
+        for node in nodes:
+            hubs[node] /= hubs_sum
+    print("Authorities: ", authorities)
+    print("Hubs: ", hubs)
+        
+            
+        
+nodes = list(map(str, input("Enter the nodes(put space between two nodes): ").split()))
+matrix = []
+for i in range(len(nodes)):
+    row_nodes = list(map(int, input(f"Enter the row{i+1} matrix values(put space between two values): ").split())) 
+    matrix.append(row_nodes)
+k = input("Enter the no of iterations: ")
+hits(matrix,nodes,int(k))
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 6
+
+# Sample input data (list of sentences)
+data = [
+    "hello world",
+    "hello mapreduce",
+    "goodbye hadoop",
+    "hello python",
+]
+
+# Step 1: Map function
+def map_function(data):
+    mapped_values = []
+    for sentence in data:
+        words = sentence.split()  # Split each sentence into words
+        for word in words:
+            mapped_values.append((word, 1))  # Create a key-value pair (word, 1)
+    print("Mapped Values (Phase 1 - Map):")
+    print(mapped_values)
+    return mapped_values
+
+# Step 2: Shuffle and Sort (Grouping by key)
+def shuffle_sort(mapped_values):
+    shuffled = {}
+    for key, value in mapped_values:
+        if key not in shuffled:
+            shuffled[key] = []
+        shuffled[key].append(value)  # Append values to the corresponding key
+    print("\nShuffled Values (Phase 2 - Shuffle & Sort):")
+    print(shuffled)
+    return shuffled
+
+# Step 3: Reduce function
+def reduce_function(shuffled):
+    reduced_values = {}
+    for key, values in shuffled.items():
+        reduced_values[key] = len(values)  # Sum all the values for each key
+    print("\nReduced Values (Phase 3 - Reduce):")
+    print(reduced_values)
+    return reduced_values
+
+# Simulate MapReduce
+mapped_values = map_function(data)         # Step 1: Map
+shuffled_values = shuffle_sort(mapped_values)  # Step 2: Shuffle and Sort
+reduced_output = reduce_function(shuffled_values)  # Step 3: Reduce
+
+# Display final result
+print(reduced_output)
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 7
+
+import nltk
+from nltk.corpus import stopwords
+import re
+nltk.download('stopwords')
+stopwords = stopwords.words('english')
+
+def remove_stopwords(txt_doc):
+    filtered_doc = []
+    for line in txt_doc:
+        line = line.strip()
+        filtered_doc.append(' '.join([word for word in line.split() if word.lower() not in stopwords]))
+    file = open('filtered_doc.txt', 'a')
+    for line in filtered_doc:
+        file.write(line + '\n')
+    file.close()
+file = input("Enter your file path: ")
+f = open(file, 'r')
+remove_stopwords(f)
+
+
+or 
+
+from nltk.corpus import stopwords
+import re
+stopwords = stopwords.words('english')
+
+def remove_stopwords(txt_doc):
+    filtered_doc = []
+    for line in txt_doc:
+        line = line.strip().split()
+        new_line = []
+        for word in line:
+            if word.lower() not in stopwords:
+                new_line.append(word)
+        filtered_doc.append(" ".join(new_line))
+            
+    file = open('filtered_doc.txt', 'a')
+    for line in filtered_doc:
+        file.write(line + '\n')
+    file.close()
+file = input("Enter your file path: ")
+f = open(file, 'r')
+remove_stopwords(f)
+
+-----------------------------------------------------------------------------------
+PRACTICAL 8
+
+import re
+
+def tdim(docs):
+    full_docs = set((" ".join(docs)).split())
+    tdim = {term.upper():[] for term in full_docs}
+    for term in full_docs:
+        for doc in docs:
+            if term in doc:
+                tdim[term.upper()].append(1)
+            else:
+                tdim[term.upper()].append(0)
+    return tdim
+      
+    
+def boolean_retrieval_model(docs,query,names):
+    matrix = tdim(docs)
+    print(matrix)
+    query = query.split()
+    query_vector = {}
+    for term in query:
+        if term != "AND" and term != "OR" and term != "NOT":
+            if(term.upper() in matrix.keys()):
+                query_vector[term.upper()] = matrix[term.upper()]
+            else:
+                query_vector[term.upper()] = [0]*len(docs)
+    
+    output = []
+    for term in query:
+        if term != "AND" and term != "OR" and term != "NOT":
+           
+            output.append(query_vector[term.upper()])
+        else:
+            output.append(term)
+    index = 0
+    while len(output) > 1:
+        if output[index] == "NOT":
+            op = [not a for a in output[index+1]]
+            output.pop(0)
+            output.pop(0)
+            output.insert(0,op)
+            index = 0
+            
+        elif output[index] == "AND":
+            op = [a & b for a,b in zip(output[index-1],output[index+1])]
+            output.pop(0)
+            output.pop(0)
+            output.pop(0)
+            output.insert(0,op)
+            index = 0
+        
+        elif output[index] == "OR":
+            op = [a | b for a,b in zip(output[index-1],output[index+1])]
+            output.pop(0)
+            output.pop(0)
+            output.pop(0)
+            output.insert(0,op)
+            index = 0
+        else:
+            index += 1
+        
+    print("Documents Retrieved are: ")
+    for i in range(len(output[0])):
+        if output[0][i] == 1:
+            if names != "":
+                print(f"{names[i]}:{docs[i]}")
+            else:
+                print(docs[i])
+
+print("1. Files\n2. String")
+option = input("Enter option: ")
+if(option == "1"):
+    docs = []
+    names = []
+    for i in range(int(input("Enter the no of documents: "))):
+        file = input("Enter file name: ")
+        names.append(file)
+        f = open(file, 'r')
+        f = " ".join(f)
+        f = re.split(r'\s+|\\n',f)
+        f = " ".join(f)
+        docs.append(f)
+    query = input("Enter the query: ")
+    boolean_retrieval_model(docs,query,names)
+elif(option == "2"):
+    docs = []
+    for i in range(int(input("Enter the no of strings: "))):
+        docs.append(input("Enter the string: "))
+    query = input("Enter the query(please put boolean operators in caps): ")
+    boolean_retrieval_model(docs,query,"")
+
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 9
+
+import numpy as np
+docs = {
+"Doc1":"hello hello world",
+    "Doc2":"hello mapreduce",
+    "Doc3":"goodbye hadoop",
+    "Doc4":"hello python"
+}
+
+query = "python world"
+
+#Sorted Vocabulary
+vocabulary = sorted(set((" ".join(docs.values())).lower().split()))
+# print(vocabulary)
+#Create vector
+
+def create_vector(text, vocabulary):
+    vec = []
+    for word in vocabulary:
+        vec.append(text.lower().split().count(word))
+    return vec
+
+def cosine_similarity(v1,v2):
+    dot_product = np.dot(v1,v2)
+    v1_ = np.sqrt(np.sum(np.square(v1)))
+    v2_ = np.sqrt(np.sum(np.square(v2)))
+    if v1_ == 0 or v2_ == 0:
+        return 0
+    return dot_product/(v1_*v2_)
+
+doc_vector = {}
+for doc in docs.keys():
+    doc_vector[doc] = create_vector(docs[doc],vocabulary)
+print(doc_vector)
+
+query_vecotr = create_vector(query,vocabulary)
+
+similarity = {}
+for doc in docs.keys():
+    similarity[doc] = cosine_similarity(doc_vector[doc],query_vecotr)
+print(similarity)
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 10
+
+import xml.etree.ElementTree as ET
+import csv
+
+def flatten_record(record):
+    flat_r = {}
+    def flatten_element(element, prefix=" "):
+        for child in element:
+            if len(child):
+                flatten_element(child, prefix + child.tag+"_")
+            else:
+                flat_r[prefix+child.tag] = child.text
+    
+    flatten_element(record, record.tag+"_")
+    return flat_r
+
+
+xml_file = input("Enter path of xml file: ")
+csv_file = input("Enter csv file with extension: ")
+
+tree = ET.parse(xml_file)
+root = tree.getroot()
+
+headers = set()
+records = []
+for record in root:
+    flat_r = flatten_record(record)
+    records.append(flat_r)
+    headers.update(flat_r.keys())
+
+csvfile = open(csv_file, "a",newline="")
+
+csvwriter = csv.writer(csvfile)
+csvwriter.writerow(headers)
+
+for record in records:
+    row = [record[header] for header in headers]
+    csvwriter.writerow(row)
+csvfile.close()
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <book>
+        <title>The Great Gatsby</title>
+        <author>F. Scott Fitzgerald</author>
+        <publication>
+            <year>1925</year>
+            <publisher>Charles Scribner's Sons</publisher>
+        </publication>
+    </book>
+    <book>
+        <title>1984</title>
+        <author>George Orwell</author>
+        <publication>
+            <year>1949</year>
+            <publisher>Secker Warburg</publisher>
+        </publication>
+        
+    </book>
+</library>
+
+
+-----------------------------------------------------------------------------------
+PRACTICAL 11
+
+import urllib.request
+import re
+from html.parser import HTMLParser
+
+# Create a subclass of HTMLParser to handle the extraction of links
+class LinkParser(HTMLParser):
+    def init(self):
+        super().init()
+        self.links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            for attr in attrs:
+                if attr[0] == 'href':
+                    self.links.append(attr[1])
+
+def fetch_page(url):
+    try:
+        with urllib.request.urlopen(url) as response:
+            return response.read().decode('utf-8')
+    except Exception as e:
+        print(f"Error fetching page: {e}")
+        return None
+
+# Take URL input from the user
+url = input("Enter the URL to crawl: ")
+
+# Fetch the page content
+page_content = fetch_page(url)
+if page_content is None:
+    print("Page doesnt have any content")
+
+else:
+    # Parse the HTML content to find all links
+    parser = LinkParser()
+    parser.feed(page_content)
+
+    # Print out all the links found on the page
+    print("Links found on the page:")
+    for link in parser.links:
+        print(link)
+
+
+-----------------------------------------------------------------------------------

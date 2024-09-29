@@ -1,0 +1,90 @@
+import re
+
+def tdim(docs):
+    full_docs = set((" ".join(docs)).split())
+    tdim = {term.upper():[] for term in full_docs}
+    for term in full_docs:
+        for doc in docs:
+            if term in doc:
+                tdim[term.upper()].append(1)
+            else:
+                tdim[term.upper()].append(0)
+    return tdim
+      
+    
+def boolean_retrieval_model(docs,query,names):
+    matrix = tdim(docs)
+    print(matrix)
+    query = query.split()
+    query_vector = {}
+    for term in query:
+        if term != "AND" and term != "OR" and term != "NOT":
+            if(term.upper() in matrix.keys()):
+                query_vector[term.upper()] = matrix[term.upper()]
+            else:
+                query_vector[term.upper()] = [0]*len(docs)
+    
+    output = []
+    for term in query:
+        if term != "AND" and term != "OR" and term != "NOT":
+           
+            output.append(query_vector[term.upper()])
+        else:
+            output.append(term)
+    index = 0
+    while len(output) > 1:
+        if output[index] == "NOT":
+            op = [not a for a in output[index+1]]
+            output.pop(0)
+            output.pop(0)
+            output.insert(0,op)
+            index = 0
+            
+        elif output[index] == "AND":
+            op = [a & b for a,b in zip(output[index-1],output[index+1])]
+            output.pop(0)
+            output.pop(0)
+            output.pop(0)
+            output.insert(0,op)
+            index = 0
+        
+        elif output[index] == "OR":
+            op = [a | b for a,b in zip(output[index-1],output[index+1])]
+            output.pop(0)
+            output.pop(0)
+            output.pop(0)
+            output.insert(0,op)
+            index = 0
+        else:
+            index += 1
+        
+    print("Documents Retrieved are: ")
+    for i in range(len(output[0])):
+        if output[0][i] == 1:
+            if names != "":
+                print(f"{names[i]}:{docs[i]}")
+            else:
+                print(docs[i])
+
+print("1. Files\n2. String")
+option = input("Enter option: ")
+if(option == "1"):
+    docs = []
+    names = []
+    for i in range(int(input("Enter the no of documents: "))):
+        file = input("Enter file name: ")
+        names.append(file)
+        f = open(file, 'r')
+        f = " ".join(f)
+        f = re.split(r'\s+|\\n',f)
+        f = " ".join(f)
+        docs.append(f)
+    query = input("Enter the query: ")
+    boolean_retrieval_model(docs,query,names)
+elif(option == "2"):
+    docs = []
+    for i in range(int(input("Enter the no of strings: "))):
+        docs.append(input("Enter the string: "))
+    query = input("Enter the query(please put boolean operators in caps): ")
+    boolean_retrieval_model(docs,query,"")
+
